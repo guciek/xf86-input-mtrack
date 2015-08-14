@@ -30,57 +30,24 @@
 
 struct MTouch;
 
-#define GS_TAP 0
-#define GS_BUTTON 1
-
-#define GS_NONE 0
-#define GS_MOVE 1
-#define GS_SCROLL 2
-#define GS_SWIPE 3
-#define GS_SCALE 4
-#define GS_ROTATE 5
-#define GS_DRAG_READY 6
-#define GS_DRAG_WAIT 7
-#define GS_DRAG_ACTIVE 8
+#define GS_TRACKED 0
 
 struct Gestures {
-	/* Taps, physical buttons, and gestures will trigger
-	 * button events. If a bit is set, the button is down.
-	 * If a bit is not set, the button is up.
-	 * Bit 0 is button 1.
-	 */
-	bitmask_t buttons;
+    /* Taps, physical buttons, and gestures will trigger
+     * button events. If a bit is set, the button is down.
+     * If a bit is not set, the button is up.
+     * Bit 0 is button 1.
+     */
+    bitmask_t buttons;
 
-	/* Pointer movement is tracked here.
-	 */
-	int move_dx, move_dy;
+    /* Pointer movement is tracked here.
+     */
+    int move_dx, move_dy;
 
-	/* Current time and time delta. Updated after each event and after sleeping.
-	 */
-	struct timeval time;
-	struct timeval dt;
-
-	/* Internal state tracking. Not for direct access.
-	 */
-	int button_emulate;
-	int button_delayed;
-	struct timeval button_delayed_time;
-	struct timeval button_delayed_delta;
-
-	int tap_touching;
-	int tap_released;
-	struct timeval tap_time_down;
-
-	int move_type;
-	int move_dist;
-	int move_dir;
-	int move_drag;
-	int move_drag_dx;
-	int move_drag_dy;
-	double move_speed;
-	struct timeval move_wait;
-	struct timeval move_drag_wait;
-	struct timeval move_drag_expire;
+    /* Internal state.
+     */
+    int pointer_touch_plus1;
+    int button_touch_plus1;
 };
 
 
