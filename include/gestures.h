@@ -30,8 +30,6 @@
 
 struct MTouch;
 
-#define GS_TRACKED 0
-
 struct Gestures {
     /* Taps, physical buttons, and gestures will trigger
      * button events. If a bit is set, the button is down.

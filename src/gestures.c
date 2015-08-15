@@ -41,48 +41,53 @@ static void update_touches(struct Gestures* gs,
     if (cfg->trackpad_disable >= 1)
         return;
 
+    if ((!GETBIT(ms->touch_used, gs->pointer_touch_plus1-1))
+                || (GETBIT(ms->touch[gs->pointer_touch_plus1-1].state, MT_INVALID))
+                || (GETBIT(ms->touch[gs->pointer_touch_plus1-1].state, MT_RELEASED))) {
+        gs->pointer_touch_plus1 = 0;
+        #ifdef DEBUG_GESTURES
+            xf86Msg(X_INFO, "update_touches: pointer touch removed\n");
+        #endif
+    }
+
+    if ((!GETBIT(ms->touch_used, gs->button_touch_plus1-1))
+                || (GETBIT(ms->touch[gs->button_touch_plus1-1].state, MT_INVALID))
+                || (GETBIT(ms->touch[gs->button_touch_plus1-1].state, MT_RELEASED))) {
+        gs->button_touch_plus1 = 0;
+        gs->buttons = 0;
+        #ifdef DEBUG_GESTURES
+            xf86Msg(X_INFO, "update_touches: button touch removed\n");
+        #endif
+    }
+
+    if (gs->pointer_touch_plus1) {
+        gs->move_dx = (int)(ms->touch[gs->pointer_touch_plus1-1].dx*cfg->sensitivity);
+        gs->move_dy = (int)(ms->touch[gs->pointer_touch_plus1-1].dy*cfg->sensitivity);
+    }
+
     foreach_bit(i, ms->touch_used) {
-        if (GETBIT(ms->touch[i].flags, GS_TRACKED)) {
-            if (GETBIT(ms->touch[i].state, MT_INVALID) \
-                    || GETBIT(ms->touch[i].state, MT_RELEASED)) {
-                CLEARBIT(ms->touch[i].flags, GS_TRACKED);
-                #ifdef DEBUG_GESTURES
-                    xf86Msg(X_INFO, "update_touches: removed touch %d\n", i);
-                #endif
-                if (gs->pointer_touch_plus1 == i+1) {
-                    gs->pointer_touch_plus1 = 0;
-                }
-                if (gs->button_touch_plus1 == i+1) {
-                    gs->button_touch_plus1 = 0;
-                    gs->buttons = 0;
-                }
-            } else if (gs->pointer_touch_plus1 == i+1) {
-                gs->move_dx = (int)(ms->touch[i].dx*cfg->sensitivity);
-                gs->move_dy = (int)(ms->touch[i].dy*cfg->sensitivity);
-            }
-        } else if ((!GETBIT(ms->touch[i].state, MT_INVALID))
-                    && GETBIT(ms->touch[i].state, MT_NEW)
-                    && (!GETBIT(ms->touch[i].flags, GS_TRACKED))) {
-            SETBIT(ms->touch[i].flags, GS_TRACKED);
-            #ifdef DEBUG_GESTURES
-                xf86Msg(X_INFO, "update_touches: added touch %d\n", i);
-            #endif
+        if ((!GETBIT(ms->touch[i].state, MT_INVALID))
+                    && GETBIT(ms->touch[i].state, MT_NEW)) {
             if (!gs->pointer_touch_plus1) {
-                gs->pointer_touch_plus1 = i+1;
-                #ifdef DEBUG_GESTURES
-                    xf86Msg(X_INFO, "update_touches: touch %d controls pointer\n", i);
-                #endif
-            } else if (!gs->button_touch_plus1) {
-                gs->button_touch_plus1 = i+1;
-                gs->buttons = 1;
-                foreach_bit(j, ms->touch_used) {
-                    if (GETBIT(ms->touch[j].state, MT_INVALID)) {
-                        gs->buttons = 4;
-                    }
+                if (gs->button_touch_plus1 != i+1) {
+                    gs->pointer_touch_plus1 = i+1;
+                    #ifdef DEBUG_GESTURES
+                        xf86Msg(X_INFO, "update_touches: touch %d controls pointer\n", i);
+                    #endif
                 }
-                #ifdef DEBUG_GESTURES
-                    xf86Msg(X_INFO, "update_touches: touch %d is a button press (mask = %d)\n", i, gs->buttons);
-                #endif
+            } else if (!gs->button_touch_plus1) {
+                if (gs->pointer_touch_plus1 != i+1) {
+                    gs->button_touch_plus1 = i+1;
+                    gs->buttons = 1;
+                    foreach_bit(j, ms->touch_used) {
+                        if (GETBIT(ms->touch[j].state, MT_INVALID)) {
+                            gs->buttons = 4;
+                        }
+                    }
+                    #ifdef DEBUG_GESTURES
+                        xf86Msg(X_INFO, "update_touches: touch %d is a button press (mask = %d)\n", i, gs->buttons);
+                    #endif
+                }
             }
         }
     }
